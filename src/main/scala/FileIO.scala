@@ -31,7 +31,7 @@ object FileIO {
       }
       catch {
         case _: Exception =>
-          println("Error: Could not load $filePath - invalid JSON format")
+          println(s"Error: Could not load $filePath - invalid JSON format")
           sys.exit(1)
       } 
 

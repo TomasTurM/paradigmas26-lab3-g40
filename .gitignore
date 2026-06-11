@@ -1,1 +1,13 @@
 ._*
+
+# Ignorar las carpetas target donde Spark y SBT guardan la compilación
+target/
+project/target/
+project/project/
+
+# Ignorar archivos de caché específicos de SBT
+.sbt/
+.bsp/
+
+# Ignorar archivos ocultos e históricos de metadatos
+.history
