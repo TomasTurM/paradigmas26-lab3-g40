@@ -91,14 +91,18 @@ object Main {
     val allEntities = filteredPostsRDD.flatMap { post =>
       val combinedText = post.title + " " + post.selftext
       Analyzer.detectEntities(combinedText, dictionary)
+    }
+
+    val sortedAllEntities = allEntities.map{ entity =>
+      ((entity.entityType, entity.text) -> 1)
+    }.reduceByKey(_ + _)
+    .sortBy{case ((entityType, text), count) =>
+      // Se ordena por conteo descendente y por tipo
+      (-count, entityType)
     }.collect().toList
 
-    // Count entities
-    val entityCounts = Analyzer.countEntities(allEntities)
-    val typeStats = Analyzer.countByType(allEntities)
-
-    println(Formatters.formatTypeStats(typeStats))
+    println(Formatters.formatAllEntities(sortedAllEntities))
     println()
-    println(Formatters.formatEntityStats(entityCounts, cmdArgs.topK))
+
   }
 }

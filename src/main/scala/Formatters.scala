@@ -63,4 +63,13 @@ $typeLines"""
     s"""============ ENTIDADES NOMBRADAS MÁS FRECUENTES ============
 $formatted"""
   }
+
+  def formatAllEntities(entities: List[((String, String), Int)]):String ={
+    val formatted = entities.map{case ((entityType, entityName), count)=>
+      s"[$entityType] $entityName: $count apariciones"
+    }.mkString("\n")
+
+    s"""============ APARICION DE ENTIDADES ============
+    $formatted"""
+  }
 }
