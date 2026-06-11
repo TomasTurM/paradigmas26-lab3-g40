@@ -78,4 +78,25 @@ Esta decisión reduce la duplicación de trabajo y permite reutilizar gran parte
 
 Esto implicó un cambio mínimo en el main el cual fue pasar tambén la URL como parametro al llamado de la función parsePosts, precisamente en el momento en que se descargan los feeds y se parsean los posts.
 
+# Ejercicio 3
 
+1) La operación reduceByKey en Spark actúa como una barrera de sincronización porque requiere que todos los datos con la misma clave se agrupen antes de poder aplicar la función de reducción.
+En el cluster ocurre lo siguiente:
+Primero, cada worker procesa sus particiones localmente. Luego, se realiza un shuffle(que es el proceso de redistribuir, agrupar y mover los datos a través de la red entre los diferentes nodos (workers) del clúster), donde los datos se redistribuyen entre nodos de forma que todas las tuplas con la misma clave queden en la misma partición. Durante este shuffle, los nodos deben intercambiar datos entre sí a través de la red. Ninguna tarea de reducción puede completarse hasta que todos los datos correspondientes a cada clave hayan llegado.
+
+Esto implica una sincronización global parcial: el sistema debe esperar a que termine el movimiento de datos antes de continuar con la reducción.
+Esta barrera es inevitable en este problema porque necesitamos contar ocurrencias por clave. Para poder sumar correctamente los valores asociados a una clave, es necesario que todos los valores estén en el mismo lugar, lo cual requiere el shuffle.
+
+2) La función que se pasa a reduceByKey debe cumplir ciertas propiedades:
+Asociatividad:
+El orden en que se agrupan las operaciones no debe afectar el resultado.
+Ejemplo: (a + b) + c = a + (b + c)
+Conmutatividad:
+El orden de los operandos no debe afectar el resultado.
+Ejemplo: a + b = b + a
+
+Estas propiedades son necesarias porque Spark ejecuta la reducción en paralelo y en distintos nodos. Los datos pueden combinarse en distinto orden dependiendo de cómo se distribuyan. También puede haber combinaciones parciales antes del shuffle.
+Si la función no cumple estas propiedades, el resultado podría ser incorrecto o no determinístico. En este trabajo, se utiliza la suma (_ + _), que cumple ambas propiedades, por lo que es segura.
+
+3) El diccionario de entidades se carga inicialmente en el driver (por ejemplo, desde un archivo o una estructura en memoria). Luego, cuando se utiliza dentro de una transformación como flatMap, Spark lo envía a los workers mediante un mecanismo de serialización, es decir, el diccionario se define en el driver, se serializa y distribuye a cada worker que lo necesite y cada worker trabaja con su propia copia local del diccionario.
+Esto puede implicar un costo si el diccionario es grande, ya que se envía a cada nodo.
