@@ -45,3 +45,37 @@ Además, es recomendable que estas funciones eviten depender de variables mutabl
 También conviene evitar efectos secundarios, como escribir archivos, imprimir mensajes por pantalla o modificar estructuras externas a la función. Dado que Spark puede ejecutar tareas en distintos workers o incluso reintentarlas ante fallos, estos efectos podrían producirse múltiples veces y generar comportamientos inesperados.
 
 En general, las funciones más adecuadas para utilizar como extension points son aquellas que reciben datos de entrada, realizan un cálculo y devuelven un resultado sin depender de variables mutables externas ni producir efectos secundarios.
+
+# Ejercicio 2
+
+## Respondemos: Que pasaría si dejamos propagar una exepcion?
+
+Las excepciones producidas durante la descarga de feeds o el parseo de posts se capturaron localmente y se transformaron en valores vacíos (None o List()). De esta forma un fallo no interrumpe el procesamiento de las demás subscripciones. Si las excepciones se dejaran propagar, Spark podría abortar la tarea correspondiente y cancelar parte del procesamiento, impidiendo obtener resultados del resto de los feeds válidos.
+
+## Notas y observaciones sobre el ejercicio 2:
+
+La adaptación del esqueleto original a Spark requirió modificar algunas operaciones sobre colecciones debido a que los datos dejaron de almacenarse en listas de Scala (List) y pasaron a representarse mediante RDDs (Resilient Distributed Datasets).
+
+Aunque muchas transformaciones conservan una sintaxis similar (map, flatMap, filter), algunas operaciones deben expresarse de forma diferente porque los datos ya no se encuentran completamente en memoria en una única máquina. Por ejemplo, las listas permiten utilizar métodos como length, nonEmpty o count con predicados directamente, mientras que en Spark es necesario utilizar acciones como count() sobre el RDD completo o combinar transformaciones (filter) con acciones (count()) para obtener resultados equivalentes.
+
+En general, la lógica del programa se mantuvo prácticamente igual a la del esqueleto original. Los cambios realizados estuvieron orientados principalmente a adaptar las operaciones al modelo distribuido de Spark.
+
+
+# Desiciones de diseño
+
+En este apartado vamos a desarrollar sobre las desiciones de diseño tomadas, intentando justificar cada una de ellas de la mejor manera.
+
+1) En el ejercicio 2, para implementar la descarga paralela de feeds se consideraron dos alternativas. La primera consistía en aplicar directamente un `flatMap` sobre el `RDD[Subscription]` para obtener un `RDD[Post]`, este es el pipeline que marcaba la consigna (`RDD[Subscription]`--flatmap-->`RDD[Post]`). Sin embargo, esta solución descartaba información necesaria para calcular posteriormente las estadísticas solicitadas en el inciso c, como la cantidad de feeds descargados exitosamente y la cantidad de fallos.
+
+Por este motivo se decidió conservar una estructura intermedia de tipo `RDD[(Boolean, List[Post])]`, donde el valor booleano indica si la descarga del feed fue exitosa y la lista contiene los posts obtenidos. Esta estructura se genera mediante una transformación `map`, ya que cada suscripción produce exactamente un resultado de salida.
+
+A partir de esta estructura intermedia se obtienen las estadísticas requeridas y posteriormente se aplica un `flatMap` sobre las listas de posts para construir el `RDD[Post]` utilizado por el resto del pipeline. De esta manera se preserva toda la información necesaria para el análisis posterior. Finalmente el pipeline podria verse como:
+(`RDD[Subscription]`-map->`RDD[(Boolean, List[Post])]`-flatMap->`RDD[Post]`) y en definitiva llegamos a lo mismo con una transformacion más de por medio a cambio de aprovechar al maximo el esqueleto provisto por la catedra.
+
+Esta decisión reduce la duplicación de trabajo y permite reutilizar gran parte del cálculo de estadísticas existente.
+
+2) En el ejercicio 2 se reutilizó el mecanismo de manejo de errores ya existente en JsonParser.parsePosts, modificando únicamente el mensaje reportado y agregando la URL de la suscripción como parámetro. De esta forma se evitó duplicar lógica en el Main y se mantuvo el tratamiento de errores asociado al parseo dentro del módulo de parseo.
+
+Esto implicó un cambio mínimo en el main el cual fue pasar tambén la URL como parametro al llamado de la función parsePosts, precisamente en el momento en que se descargan los feeds y se parsean los posts.
+
+
