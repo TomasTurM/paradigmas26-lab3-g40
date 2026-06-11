@@ -9,8 +9,8 @@ object JsonParser {
    * @param subscriptionName name of subscription (for logging)
    * @return list of posts, empty list if parsing fails
    */
-  def parsePosts(jsonContent: String, subscriptionName: String): List[Post] = {
-    try {
+  def parsePosts(jsonContent: String, subscriptionName: String, subscriptionUrl: String): List[Post] = {
+    try {//error7
       implicit val formats: Formats = DefaultFormats
 
       val json = parse(jsonContent)
@@ -24,7 +24,7 @@ object JsonParser {
       }
     } catch {
       case _: Exception =>
-        println(s"Warning: Failed to parse JSON from '$subscriptionName'")
+        println(s"Warning: Failed to parse posts from '${subscriptionName}' (${subscriptionUrl})")
         List()
     }
   }

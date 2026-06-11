@@ -23,13 +23,20 @@ object Main {
     // Filter out malformed subscriptions (None values)
     val subscriptions = subscriptionOpts.flatten
 
+    if (subscriptions.isEmpty) {//error4
+      println("Error: No valid subscriptions found")
+      return
+    }
+
     val subscriptionsRDD = sc.parallelize(subscriptions)
-    //
 
     // Download feeds and parse posts, tracking success/failure
     val downloadResults = subscriptionsRDD.map{ subscription =>
       val feedOpt = FileIO.downloadFeed(subscription.url)
-      val posts = feedOpt.fold(List[Post]())(JsonParser.parsePosts(_, subscription.name))
+      if (feedOpt.isEmpty) {
+        println(s"Warning: Failed to download from '${subscription.name}' (${subscription.url})")
+      }
+      val posts = feedOpt.fold(List[Post]())(JsonParser.parsePosts(_, subscription.name, subscription.url))
       (feedOpt.isDefined, posts)
     }
 

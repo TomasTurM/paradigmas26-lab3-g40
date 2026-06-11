@@ -6,19 +6,27 @@ object Dictionary {
    * @param entityType type of entity to create ("Person", "University", etc.)
    * @return Option containing list of entities, None if file missing
    */
+
   def loadFromFile(filePath: String, entityType: String): Option[List[NamedEntity]] = {
-    FileIO.readDictionaryFile(filePath).map { lines =>
-      lines.map { name =>
-        entityType match {
-          case "Person"              => new Person(name)
-          case "Organization"        => new Organization(name)
-          case "University"          => new University(name)
-          case "Place"               => new Place(name)
-          case "Technology"          => new Technology(name)
-          case "ProgrammingLanguage" => new ProgrammingLanguage(name)
-          case _                     => new Person(name) // fallback
+    val linesOpt = FileIO.readDictionaryFile(filePath)
+
+    if (linesOpt.isEmpty) {//error6
+      println(s"Warning: Could not load $filePath")
+      None
+    } else {
+      Some(
+        linesOpt.get.map { name =>
+          entityType match {
+            case "Person"              => new Person(name)
+            case "Organization"        => new Organization(name)
+            case "University"          => new University(name)
+            case "Place"               => new Place(name)
+            case "Technology"          => new Technology(name)
+            case "ProgrammingLanguage" => new ProgrammingLanguage(name)
+            case _                     => new Person(name)
+          }
         }
-      }
+      )
     }
   }
 
@@ -29,8 +37,13 @@ object Dictionary {
    * @return combined list of all entities from all successfully loaded dictionaries
    */
   def loadAll(entitiesDir: String): List[NamedEntity] = {
-    // Check if entities directory exists
     val dataDir = new java.io.File(entitiesDir)
+
+    // Check if entities directory exists
+    if (!dataDir.exists() || !dataDir.isDirectory) {//error5
+      println(s"Error: entities directory '$entitiesDir' not found")
+      sys.exit(1)
+    }
 
     val peopleOpt = loadFromFile(s"$entitiesDir/people.txt", "Person")
 
