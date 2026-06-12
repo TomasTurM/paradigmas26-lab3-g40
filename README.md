@@ -41,6 +41,18 @@ With custom parameters:
 sbt "run --subscription-file subscriptions.json --entities-dir data --top-k 15"
 ```
 
+Using Makefile:
+```bash
+paradigmas26-lab3-g40 > make help
+Comandos disponibles:
+  make run                 - Ejecuta la configuración por defecto (local).
+  make run-local           - Ejecuta con el archivo de suscripciones local.
+  make run-malformed       - Ejecuta con un archivo JSON inválido.
+  make run-bad-url         - Ejecuta con URLs fallidas.
+  make run-incorrect-format- Ejecuta con suscripciones con campos faltantes.
+  make test                - Ejecuta los tests de integración (tests.sh).
+```
+
 ### Command-Line Arguments
 
 All arguments are optional:
