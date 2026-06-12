@@ -61,7 +61,7 @@ Aunque muchas transformaciones conservan una sintaxis similar (map, flatMap, fil
 En general, la lógica del programa se mantuvo prácticamente igual a la del esqueleto original. Los cambios realizados estuvieron orientados principalmente a adaptar las operaciones al modelo distribuido de Spark.
 
 
-# Desiciones de diseño
+# Decisiones de diseño
 
 En este apartado vamos a desarrollar sobre las desiciones de diseño tomadas, intentando justificar cada una de ellas de la mejor manera.
 
@@ -100,3 +100,29 @@ Si la función no cumple estas propiedades, el resultado podría ser incorrecto 
 
 3) El diccionario de entidades se carga inicialmente en el driver (por ejemplo, desde un archivo o una estructura en memoria). Luego, cuando se utiliza dentro de una transformación como flatMap, Spark lo envía a los workers mediante un mecanismo de serialización, es decir, el diccionario se define en el driver, se serializa y distribuye a cada worker que lo necesite y cada worker trabaja con su propia copia local del diccionario.
 Esto puede implicar un costo si el diccionario es grande, ya que se envía a cada nodo.
+
+# Ejercicio 4
+
+![alt text](<ej4_stats_screenshot.png>)
+
+## Respuestas:
+**¿Por qué los Accumulators solo deben usarse para métricas y no para tomar decisiones lógicas dentro de las etapas distribuidas del pipeline? ¿En qué situación un Accumulator puede dar un valor incorrecto?**
+
+Porque el valor de un acumulador que lee un worker es una copia local y no refleja el estado global. Por lo tanto, una decisión basada en ese valor dentro de una transformación sería impredecible.
+
+Un acumulador puede dar un valor incorrecto en la re-ejecución de tareas, si un nodo falla.
+
+**¿En qué momento del pipeline está disponible el valor de un Accumulator para ser leído por el driver?**
+
+Después de que una acción de Spark ha finalizado. Las transformaciones son perezosas y solo definen un plan de ejecución. Es la acción (`count()`, `collect()`, etc.) la que dispara la ejecución del plan. 
+
+Por ejemplo, en nuestro código el valor de los acumuladores es confiable solo después de la línea 
+
+```
+Main.s
+(...) 
+70 val countedFilteredPosts = filteredPostsRDD.count()
+(...) 
+``` 
+
+ya que `count()` es la primera acción que fuerza su cómputo.
