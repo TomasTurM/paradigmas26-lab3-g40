@@ -126,3 +126,32 @@ Main.s
 ``` 
 
 ya que `count()` es la primera acción que fuerza su cómputo.
+
+# Ejercicio 5
+
+
+1) ¿Qué ocurriría si no llamaran a cache()? ¿Cuántas veces se ejecutaría la descarga de feeds?
+
+Si no se utiliza cache(), Spark recomputa todo el pipeline cada vez que se ejecuta una acción sobre un RDD. En este caso, el RDD filteredPostsRDD se utiliza en múltiples acciones (count(), sum() y collect()), por lo que todo el pipeline previo (incluyendo la descarga de feeds, parsing y filtrado) se ejecutaría nuevamente en cada una de ellas.
+
+Como resultado, la descarga de feeds se ejecutaría tantas veces como acciones se realicen sobre ese RDD. En este caso particular, la descarga se ejecutaría *tres veces*, lo cual es altamente ineficiente, especialmente porque implica operaciones de I/O (red).
+
+
+
+2) ¿Por qué es incorrecto llamar a collect() entre los pasos a) y b) del ejercicio 3 y luego continuar el pipeline? ¿Qué consecuencia tiene sobre la distribución del trabajo?
+
+Llamar a collect() en medio del pipeline es incorrecto porque esta operación trae todos los datos al driver, rompiendo el modelo distribuido de Spark. A partir de ese momento, cualquier procesamiento posterior se realiza de manera local en el driver, en lugar de ejecutarse en paralelo en los nodos del cluster.
+
+Esto tiene dos consecuencias principales:
+
+* Se pierde el paralelismo y la escalabilidad del sistema.
+* Se puede generar un problema de memoria si el volumen de datos es grande, ya que todo debe caber en el driver.
+
+En resumen, collect() debe utilizarse únicamente al final del pipeline, cuando realmente se necesita materializar el resultado final.
+
+
+3) cache() es también lazy. ¿En qué momento se almacena realmente el RDD en memoria?
+
+La operación cache() en Spark es lazy, lo que significa que no almacena inmediatamente el RDD en memoria cuando se invoca. En cambio, simplemente marca el RDD para ser cacheado.
+
+El almacenamiento real ocurre recién cuando se ejecuta una acción sobre ese RDD (por ejemplo, count(), sum(), collect(), etc.). En ese momento, Spark calcula el RDD y guarda sus particiones en memoria para reutilizarlas en futuras acciones, evitando recomputaciones.
