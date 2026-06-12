@@ -61,7 +61,8 @@ object Main {
         post.selftext.trim.nonEmpty
       if (!isValid) postsDiscardedAcc.add(1)
       isValid
-    }//RDD[Post] (filtrados)
+    }.cache()
+    //RDD[Post] (filtrados)
 
     // c) Midan el tiempo total de ejecución del pipeline
     val startTime1 = System.currentTimeMillis()
@@ -74,6 +75,7 @@ object Main {
 
     // Check si no tenemos posts para procesar
     if (countedFilteredPosts == 0) {
+      filteredPostsRDD.unpersist()
       println("Error: No valid posts downloaded after filtering")
       return
     }
@@ -123,6 +125,8 @@ object Main {
     println(Formatters.formatAllEntities(sortedAllEntities))
     println(s"Tiempo de análisis de entidades: ${duration2} segundos")
     println()
+
+    filteredPostsRDD.unpersist()
 
   }
 }
