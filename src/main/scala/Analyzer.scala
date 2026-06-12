@@ -1,3 +1,5 @@
+import org.apache.spark.rdd.RDD
+
 object Analyzer {
 
   /**
@@ -41,6 +43,13 @@ object Analyzer {
       .mapValues(_.size)
       .toMap
   }
+
+  def countEntitiesRDD(entitiesRDD: RDD[NamedEntity]): RDD[((String, String), Int)] = {
+    entitiesRDD.map { entity => //ej3 inciso b
+      (entity.entityType, entity.text) -> 1
+    }.reduceByKey(_+_)//ej3 inciso c
+  }
+
 
   /**
    * Count total entities and entities by type.

@@ -111,18 +111,12 @@ object Main {
       Analyzer.detectEntities(combinedText, dictionary)
     }
 
-    val sortedAllEntities = allEntities.map{ entity =>
-      ((entity.entityType, entity.text) -> 1)
-    }.reduceByKey(_ + _)
-    .sortBy{case ((entityType, text), count) =>
-      // Se ordena por conteo descendente y por tipo
-      (-count, entityType)
-    }.collect().toList
+    val entityCounts = Analyzer.countEntitiesRDD(allEntities).collect().toMap
 
     val endTime2 = System.currentTimeMillis()
     val duration2 = (endTime2 - startTime2) / 1000.0
 
-    println(Formatters.formatAllEntities(sortedAllEntities))
+    println(Formatters.formatEntityStats(entityCounts, cmdArgs.topK))
     println(s"Tiempo de análisis de entidades: ${duration2} segundos")
     println()
 
