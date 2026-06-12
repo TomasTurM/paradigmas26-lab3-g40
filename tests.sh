@@ -4,7 +4,6 @@
 # Modular test functions for flexibility and extensibility
 
 # Constants
-ENV_VARS="SBT_OPTS=\"--sun-misc-unsafe-memory-access=allow --enable-native-access=ALL-UNNAMED\""
 TESTS_DIR="data"
 PASSED=0
 FAILURES=0
@@ -95,7 +94,7 @@ assert_not_contains() {
 temp_file=$(mktemp)
 run_test \
   "Default parameters (with local urls)" \
-  "$ENV_VARS sbt \"run --subscription-file $TESTS_DIR/local_subscriptions.json\"" \
+  "sbt \"run --subscription-file $TESTS_DIR/local_subscriptions.json\"" \
   "$temp_file"
 
 if [ $? -eq 0 ]; then
@@ -108,7 +107,7 @@ fi
 temp_file=$(mktemp)
 run_test \
   "Custom top-k parameter (2)" \
-  "$ENV_VARS sbt \"run --subscription-file $TESTS_DIR/local_subscriptions.json --entities-dir $TESTS_DIR/valid_entities --top-k 2\"" \
+  "sbt \"run --subscription-file $TESTS_DIR/local_subscriptions.json --entities-dir $TESTS_DIR/valid_entities --top-k 2\"" \
   "$temp_file"
 
 if [ $? -eq 0 ]; then
@@ -123,7 +122,7 @@ fi
 temp_file=$(mktemp)
 run_test \
   "Malformed JSON in subscriptions file" \
-  "$ENV_VARS sbt \"run --subscription-file $TESTS_DIR/malformed_json_subscriptions.json\"" \
+  "sbt \"run --subscription-file $TESTS_DIR/malformed_json_subscriptions.json\"" \
   "$temp_file"
 
 if [ $? -eq 0 ]; then
@@ -136,7 +135,7 @@ fi
 temp_file=$(mktemp)
 run_test \
   "Bad/unreachable URLs in subscriptions" \
-  "$ENV_VARS sbt \"run --subscription-file $TESTS_DIR/bad_url_subscriptions.json --entities-dir $TESTS_DIR/valid_entities\"" \
+  "sbt \"run --subscription-file $TESTS_DIR/bad_url_subscriptions.json --entities-dir $TESTS_DIR/valid_entities\"" \
   "$temp_file"
 
 if [ $? -eq 0 ]; then
@@ -150,7 +149,7 @@ fi
 temp_file=$(mktemp)
 run_test \
   "Incorrect subscription format (missing fields)" \
-  "$ENV_VARS sbt \"run --subscription-file $TESTS_DIR/incorrect_format_subscriptions.json --entities-dir $TESTS_DIR/valid_entities\"" \
+  "sbt \"run --subscription-file $TESTS_DIR/incorrect_format_subscriptions.json --entities-dir $TESTS_DIR/valid_entities\"" \
   "$temp_file"
 
 if [ $? -eq 0 ]; then
@@ -163,7 +162,7 @@ fi
 temp_file=$(mktemp)
 run_test \
   "Missing entity directory" \
-  "$ENV_VARS sbt \"run --subscription-file $TESTS_DIR/local_subscriptions.json --entities-dir $TESTS_DIR/nonexistent\"" \
+  "sbt \"run --subscription-file $TESTS_DIR/local_subscriptions.json --entities-dir $TESTS_DIR/nonexistent\"" \
   "$temp_file"
 
 if [ $? -eq 0 ]; then
@@ -176,7 +175,7 @@ fi
 temp_file=$(mktemp)
 run_test \
   "Partial entity files (some missing)" \
-  "$ENV_VARS sbt \"run --subscription-file $TESTS_DIR/local_subscriptions.json --entities-dir $TESTS_DIR/missing_entities\"" \
+  "sbt \"run --subscription-file $TESTS_DIR/local_subscriptions.json --entities-dir $TESTS_DIR/missing_entities\"" \
   "$temp_file"
 
 if [ $? -eq 0 ]; then
